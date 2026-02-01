@@ -14,23 +14,25 @@ public sealed class AccountController : ControllerBase
         _accountService = accountService;
     }
 
-    [HttpGet("registration")]
     [HttpPost("registration")]
-    public IActionResult Registration([FromQuery] string name)
+    public IActionResult Registration([FromBody] RegistrationRequest request)
     {
-        var id = _accountService.Register(name);
-        return Ok(new { id, name });
+        var id = _accountService.Register(request.Name);
+        return Ok(new { id, name = request.Name });
     }
 
-    [HttpGet("login")]
-    public IActionResult Login([FromQuery] long id)
+    [HttpPost("login")]
+    public IActionResult Login([FromBody] LoginRequest request)
     {
-        var name = _accountService.Login(id);
+        var name = _accountService.Login(request.Id);
         if (string.IsNullOrEmpty(name))
         {
             return NotFound();
         }
 
-        return Ok(new { id, name });
+        return Ok(new { id = request.Id, name });
     }
+
+    public sealed record RegistrationRequest(string Name);
+    public sealed record LoginRequest(long Id);
 }
