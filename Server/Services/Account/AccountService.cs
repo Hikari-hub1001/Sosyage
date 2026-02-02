@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
-using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Server.Data;
+using Server.Data.Entities;
 
 namespace Server.Services.Account;
 
@@ -8,86 +10,55 @@ public sealed class AccountService : IAccountService
     private static readonly TimeZoneInfo TokyoTimeZone =
         TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
 
-    private readonly SqliteConnection _connection;
+    private readonly AppDbContext _db;
 
-    public AccountService(SqliteConnection connection)
+    public AccountService(AppDbContext db)
     {
-        _connection = connection;
+        _db = db;
     }
 
     public long Register(string name)
     {
-        _connection.Open();
-        try
-        {
-            const int maxAttempts = 5;
-            long id = 0;
+        const int maxAttempts = 5;
+        long id = 0;
 
-            for (var attempt = 0; attempt < maxAttempts; attempt++)
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            id = NextInt32Range(1_000_000_000, int.MaxValue);
+
+            _db.Accounts.Add(new Data.Entities.Account
             {
-                id = NextInt32Range(1_100_000_000, int.MaxValue);
+                Id = id,
+                Name = name,
+                LastLoginAt = FormatJstNow()
+            });
 
-                using var command = _connection.CreateCommand();
-                command.CommandText = "INSERT INTO Account (id, name, last_login_at) VALUES ($id, $name, $lastLoginAt);";
-                command.Parameters.AddWithValue("$id", id);
-                command.Parameters.AddWithValue("$name", name);
-                command.Parameters.AddWithValue("$lastLoginAt", FormatJstNow());
-
-                try
-                {
-                    command.ExecuteNonQuery();
-                    break;
-                }
-                catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
-                {
-                    if (attempt == maxAttempts - 1)
-                    {
-                        throw;
-                    }
-                }
+            try
+            {
+                _db.SaveChanges();
+                return id;
             }
+            catch (DbUpdateException) when (attempt < maxAttempts - 1)
+            {
+                _db.ChangeTracker.Clear();
+            }
+        }
 
-            return id;
-        }
-        finally
-        {
-            _connection.Close();
-        }
+        throw new InvalidOperationException("Failed to generate unique account id.");
     }
 
     public string? Login(long id)
     {
-        _connection.Open();
-        try
+        var account = _db.Accounts.SingleOrDefault(a => a.Id == id);
+        if (account is null)
         {
-            string? name;
-
-            using (var selectCommand = _connection.CreateCommand())
-            {
-                selectCommand.CommandText = "SELECT name FROM Account WHERE id = $id;";
-                selectCommand.Parameters.AddWithValue("$id", id);
-                name = selectCommand.ExecuteScalar() as string;
-            }
-
-            if (string.IsNullOrEmpty(name))
-            {
-                return null;
-            }
-
-            using (var updateCommand = _connection.CreateCommand())
-            {
-                updateCommand.CommandText = "UPDATE Account SET last_login_at = $lastLoginAt WHERE id = $id;";
-                updateCommand.Parameters.AddWithValue("$id", id);
-                updateCommand.Parameters.AddWithValue("$lastLoginAt", FormatJstNow());
-                updateCommand.ExecuteNonQuery();
-            }
-
-            return name;
+            return null;
         }
-        finally
-        {
-            _connection.Close();
-        }
+
+        account.LastLoginAt = FormatJstNow();
+        _db.SaveChanges();
+
+        return account.Name;
     }
 
     private static string FormatJstNow()

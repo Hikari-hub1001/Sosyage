@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Services.Account;
 
-namespace Server.Controllers;
+namespace Server.Controllers.Account;
 
 [ApiController]
 [Route("account")]

@@ -1,4 +1,7 @@
-using Server.Services.Account;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Server.Data;
+using Server.Infrastructure;
 
 namespace Server;
 
@@ -10,18 +13,31 @@ public static class Application
     /// <param name="args"></param>
     public static void Main(string[] args)
     {
-        //Directory.CreateDirectory("db");
-
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddControllers();
-        builder.Services.AddScoped(_ => new Microsoft.Data.Sqlite.SqliteConnection("Data Source=db/app.db"));
-        builder.Services.AddScoped<IAccountService, AccountService>();
+        builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=db/app.db"));
+        builder.Services.AddAppServices();
 
         var app = builder.Build();
 
-        using (var connection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=db/app.db"))
+        var adminRoot = Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "admin");
+        var adminFileProvider = new PhysicalFileProvider(adminRoot);
+
+        app.UseDefaultFiles(new DefaultFilesOptions
         {
-            connection.Open();
+            FileProvider = adminFileProvider,
+            RequestPath = "/admin"
+        });
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = adminFileProvider,
+            RequestPath = "/admin"
+        });
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.EnsureCreated();
         }
 
         app.MapControllers();
