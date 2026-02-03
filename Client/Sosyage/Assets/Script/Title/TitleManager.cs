@@ -13,9 +13,18 @@ public class TitleManager : MonoBehaviour
 	[SerializeField]
 	private CreateUserData createUserData;
 
+
+	[SerializeField]
+	private Button deleteButton;
+
 	private void Start()
 	{
 		startButton.onClick.AddListener(() => OnStartButtonClicked().Forget());
+		deleteButton.onClick.AddListener(() => 
+		{
+			PlayerPrefs.DeleteKey("UserID");
+			GameManager.Instance.userData = null;
+		});
 	}
 
 	private async UniTask OnStartButtonClicked()
