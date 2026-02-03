@@ -1,0 +1,69 @@
+{
+    "period": {
+        "start": "2026-02-01",
+        "end": "2026-02-28"
+    },
+    "currentDay": 1,
+    "dailyBonuses": [
+        {
+            "bonuses": [
+                {
+                    "id": 1,
+                    "quantity": 100
+                }
+            ]
+        },
+        {
+            "bonuses": [
+                {
+                    "id": 1,
+                    "quantity": 200
+                }
+            ]
+        },
+        {
+            "bonuses": [
+                {
+                    "id": 1,
+                    "quantity": 300
+                }
+            ]
+        },
+        {
+            "bonuses": [
+                {
+                    "id": 1,
+                    "quantity": 400
+                }
+            ]
+        },
+        {
+            "bonuses": [
+                {
+                    "id": 1,
+                    "quantity": 500
+                }
+            ]
+        },
+        {
+            "bonuses": [
+                {
+                    "id": 1,
+                    "quantity": 600
+                }
+            ]
+        },
+        {
+            "bonuses": [
+                {
+                    "id": 1,
+                    "quantity": 700
+                },
+                {
+                    "id": 2,
+                    "quantity": 1
+                }
+            ]
+        }
+    ]
+}
