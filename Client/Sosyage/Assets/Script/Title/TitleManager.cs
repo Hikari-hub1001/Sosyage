@@ -24,53 +24,15 @@ public class TitleManager : MonoBehaviour
 		{
 			var data = await createUserData.Create();
 
-			using (UnityWebRequest www = new UnityWebRequest("http://13.115.106.60:25566/account/registration",UnityWebRequest.kHttpVerbPOST))
-			{
-				byte[] bodyRaw = Encoding.UTF8.GetBytes("{\"name\":\""+data.name+"\"}");
-				www.uploadHandler = new UploadHandlerRaw(bodyRaw);
-				www.downloadHandler = new DownloadHandlerBuffer();
-
-				www.SetRequestHeader("Content-Type", "application/json; charset=utf-8");
-
-				await www.SendWebRequest();
-
-				if (www.result == UnityWebRequest.Result.Success)
-				{
-					Debug.Log($"User created successfully {www.downloadHandler.text}");
-					GameManager.Instance.userData = JsonUtility.FromJson<UserData>(www.downloadHandler.text);
-
-					PlayerPrefs.SetInt("UserID", GameManager.Instance.userData.id);
-				}
-				else
-				{
-					Debug.LogError("User creation failed: " + www.error);
-					return;
-				}
-			}
+			var res = await  APIRequest.SendRequesr<UserData>("account/registration", "{\"name\":\"" + data.name + "\"}");
+			GameManager.Instance.userData = res;
+			PlayerPrefs.SetInt("UserID", GameManager.Instance.userData.id);
 		}
 		else
 		{
-			using (UnityWebRequest www = new UnityWebRequest("http://13.115.106.60:25566/account/login", UnityWebRequest.kHttpVerbPOST))
-			{
-				byte[] bodyRaw = Encoding.UTF8.GetBytes("{\"id\":\"" + GameManager.Instance.userData.id + "\"}");
-				www.uploadHandler = new UploadHandlerRaw(bodyRaw);
-				www.downloadHandler = new DownloadHandlerBuffer();
+			var res = await APIRequest.SendRequesr<UserData>("account/login", "{\"id\":\"" + GameManager.Instance.userData.id + "\"}");
 
-				www.SetRequestHeader("Content-Type", "application/json; charset=utf-8");
-
-				await www.SendWebRequest();
-
-				if (www.result == UnityWebRequest.Result.Success)
-				{
-					Debug.Log($"User Login successfully {www.downloadHandler.text}");
-					GameManager.Instance.userData = JsonUtility.FromJson<UserData>(www.downloadHandler.text);
-				}
-				else
-				{
-					Debug.LogError("User creation failed: " + www.error);
-					return;
-				}
-			}
+			GameManager.Instance.userData = res;
 		}
 		SceneManager.LoadSceneAsync("Home");
 
