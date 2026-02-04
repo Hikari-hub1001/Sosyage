@@ -207,80 +207,32 @@ public sealed class LoginBonusService : ILoginBonusService
         var maxDayNumber = dayList.LastOrDefault()?.DayNumber ?? 0;
         var dailyBonuses = BuildDailyBonuses(dayList, maxDayNumber);
 
-        var currentDay = 0;
-        var canClaim = IsWithinPeriod(today, monthEntity.StartDate, monthEntity.EndDate);
-
         var accountBonus = _db.AccountLoginBonuses
             .SingleOrDefault(b => b.AccountId == accountId && b.MonthId == monthEntity.Id);
 
-        if (accountBonus is not null)
+        var currentDay = accountBonus?.CurrentDay ?? 0;
+        // 期間外なら付与せず、データのみ返す。
+        if (!IsWithinPeriod(today, monthEntity.StartDate, monthEntity.EndDate))
         {
-            currentDay = accountBonus.CurrentDay;
+            return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, false);
         }
 
-        if (canClaim)
+        // すでに本日付与済みなら、現在の状態を返す。
+        if (accountBonus?.LastClaimedDay == today.Day)
         {
-            var lastClaimedDay = accountBonus?.LastClaimedDay;
-            if (lastClaimedDay != today.Day)
-            {
-                var nextDayNumber = GetNextDayNumber(dayList, currentDay);
-                if (nextDayNumber.HasValue)
-                {
-                    using var transaction = _db.Database.BeginTransaction();
-                    try
-                    {
-                        if (accountBonus is null)
-                        {
-                            accountBonus = new Data.Entities.AccountLoginBonus
-                            {
-                                AccountId = accountId,
-                                MonthId = monthEntity.Id
-                            };
-                            _db.AccountLoginBonuses.Add(accountBonus);
-                        }
-
-                        accountBonus.CurrentDay = nextDayNumber.Value;
-                        accountBonus.LastClaimedDay = today.Day;
-
-                        var logExists = _db.AccountLoginBonusLogs.Any(log =>
-                            log.AccountId == accountId &&
-                            log.MonthId == monthEntity.Id &&
-                            log.DayNumber == nextDayNumber.Value);
-
-                        if (!logExists)
-                        {
-                            _db.AccountLoginBonusLogs.Add(new Data.Entities.AccountLoginBonusLog
-                            {
-                                AccountId = accountId,
-                                MonthId = monthEntity.Id,
-                                DayNumber = nextDayNumber.Value,
-                                ClaimedAt = jstNow.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture)
-                            });
-                        }
-
-                        _db.SaveChanges();
-                        transaction.Commit();
-                        currentDay = accountBonus.CurrentDay;
-                    }
-                    catch
-                    {
-                        transaction.Rollback();
-                        throw;
-                    }
-                }
-            }
+            return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, false);
         }
 
-        return new LoginBonusClaimResponse
+        var nextDayNumber = GetNextDayNumber(dayList, currentDay);
+        // 次の報酬日がない場合は、現在の状態を返す。
+        if (!nextDayNumber.HasValue)
         {
-            Period = new LoginBonusPeriod
-            {
-                Start = monthEntity.StartDate,
-                End = monthEntity.EndDate
-            },
-            CurrentDay = currentDay,
-            DailyBonuses = dailyBonuses
-        };
+            return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, false);
+        }
+
+        currentDay = PersistClaim(accountId, monthEntity, accountBonus, nextDayNumber.Value, today.Day, jstNow);
+
+        return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, true);
     }
 
     private static void Validate(LoginBonusRegistration request)
@@ -379,5 +331,75 @@ public sealed class LoginBonusService : ILoginBonusService
         }
 
         return today >= startDate && today <= endDate;
+    }
+
+    private static LoginBonusClaimResponse BuildClaimResponse(
+        EntityLoginBonusMonth monthEntity,
+        int currentDay,
+        List<LoginBonusDailyBonus> dailyBonuses,
+        bool claimedThisRequest)
+    {
+        return new LoginBonusClaimResponse
+        {
+            Period = new LoginBonusPeriod
+            {
+                Start = monthEntity.StartDate,
+                End = monthEntity.EndDate
+            },
+            CurrentDay = currentDay,
+            IsClaimedThisRequest = claimedThisRequest,
+            DailyBonuses = dailyBonuses
+        };
+    }
+
+    private int PersistClaim(
+        long accountId,
+        EntityLoginBonusMonth monthEntity,
+        Data.Entities.AccountLoginBonus? accountBonus,
+        int dayNumber,
+        int todayDay,
+        DateTimeOffset jstNow)
+    {
+        using var transaction = _db.Database.BeginTransaction();
+        try
+        {
+            if (accountBonus is null)
+            {
+                accountBonus = new Data.Entities.AccountLoginBonus
+                {
+                    AccountId = accountId,
+                    MonthId = monthEntity.Id
+                };
+                _db.AccountLoginBonuses.Add(accountBonus);
+            }
+
+            accountBonus.CurrentDay = dayNumber;
+            accountBonus.LastClaimedDay = todayDay;
+
+            var logExists = _db.AccountLoginBonusLogs.Any(log =>
+                log.AccountId == accountId &&
+                log.MonthId == monthEntity.Id &&
+                log.DayNumber == dayNumber);
+
+            if (!logExists)
+            {
+                _db.AccountLoginBonusLogs.Add(new Data.Entities.AccountLoginBonusLog
+                {
+                    AccountId = accountId,
+                    MonthId = monthEntity.Id,
+                    DayNumber = dayNumber,
+                    ClaimedAt = jstNow.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture)
+                });
+            }
+
+            _db.SaveChanges();
+            transaction.Commit();
+            return accountBonus.CurrentDay;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 }

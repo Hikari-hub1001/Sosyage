@@ -17,12 +17,12 @@ public sealed class LoginBonusController : ControllerBase
     [HttpPost("claim")]
     public IActionResult Claim([FromBody] LoginBonusClaimRequest request)
     {
-        if (request.AccountId <= 0)
+        if (request.id <= 0)
         {
             return NotFound(new { error = "Not found accountId" });
         }
 
-        var response = _loginBonusService.ClaimForAccount(request.AccountId);
+        var response = _loginBonusService.ClaimForAccount(request.id);
         if (response is null)
         {
             return NotFound(new { error = "login bonus not found" });

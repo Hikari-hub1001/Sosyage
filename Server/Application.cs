@@ -14,11 +14,21 @@ public static class Application
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddControllers();
+        builder.Services.AddControllers(options =>
+        {
+            options.Filters.Add<ApiVersionResponseFilter>();
+        });
+        builder.Services.AddScoped<ApiVersionResponseFilter>();
+        builder.Services.Configure<VersionOptions>(builder.Configuration.GetSection("Version"));
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=db/app.db"));
         builder.Services.AddAppServices();
 
         var app = builder.Build();
+
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
         var adminRoot = Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "admin");
         var adminFileProvider = new PhysicalFileProvider(adminRoot);

@@ -22,13 +22,14 @@ public sealed record LoginBonusReward
 
 public sealed record LoginBonusClaimRequest
 {
-    public long AccountId { get; init; }
+    public long id { get; init; }
 }
 
 public sealed record LoginBonusClaimResponse
 {
     public LoginBonusPeriod Period { get; init; } = new();
     public int CurrentDay { get; init; }
+    public bool IsClaimedThisRequest { get; init; }
     public List<LoginBonusDailyBonus> DailyBonuses { get; init; } = new();
 }
 
