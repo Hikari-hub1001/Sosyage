@@ -8,10 +8,12 @@ namespace Server.Infrastructure;
 public sealed class ApiVersionResponseFilter : IResultFilter
 {
     private readonly VersionOptions _options;
+    private readonly JsonSerializerOptions _serializerOptions;
 
-    public ApiVersionResponseFilter(IOptions<VersionOptions> options)
+    public ApiVersionResponseFilter(IOptions<VersionOptions> options, IOptions<JsonOptions> jsonOptions)
     {
         _options = options.Value;
+        _serializerOptions = jsonOptions.Value.JsonSerializerOptions;
     }
 
     public void OnResultExecuting(ResultExecutingContext context)
@@ -21,7 +23,7 @@ public sealed class ApiVersionResponseFilter : IResultFilter
             return;
         }
 
-        if (!TryToDictionary(objectResult.Value, out var payload))
+        if (!TryToDictionary(objectResult.Value, _serializerOptions, out var payload))
         {
             payload = new Dictionary<string, object?>(StringComparer.Ordinal);
         }
@@ -43,7 +45,7 @@ public sealed class ApiVersionResponseFilter : IResultFilter
     {
     }
 
-    private static bool TryToDictionary(object? value, out Dictionary<string, object?> result)
+    private static bool TryToDictionary(object? value, JsonSerializerOptions options, out Dictionary<string, object?> result)
     {
         if (value is null)
         {
@@ -73,7 +75,7 @@ public sealed class ApiVersionResponseFilter : IResultFilter
             return true;
         }
 
-        var element = JsonSerializer.SerializeToElement(value);
+        var element = JsonSerializer.SerializeToElement(value, options);
         if (element.ValueKind == JsonValueKind.Object)
         {
             result = ConvertToDictionary(element);
