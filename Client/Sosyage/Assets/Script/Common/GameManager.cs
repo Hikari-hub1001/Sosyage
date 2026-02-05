@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using OriginalLib.Behaviour;
 using System;
 using UnityEngine;
@@ -7,7 +8,7 @@ public class GameManager : Singleton_DontDestroy<GameManager>
 	[NonSerialized]
 	public UserData userData = null;
 
-	protected override void Init()
+	protected async override void Init()
 	{
 		base.Init();
 		Debug.Log(PlayerPrefs.HasKey("UserID"));
@@ -18,6 +19,11 @@ public class GameManager : Singleton_DontDestroy<GameManager>
 			userData = new UserData();
 			userData.id = PlayerPrefs.GetInt("UserID");
 		}
+
+		//AssetBundle.UnloadAllAssetBundles(true);
+		//UnityEngine.Caching.ClearCache();
+
+		await AddressablesRemoteLabelDownloader.EnsureInitialized();
 	}
 
 }

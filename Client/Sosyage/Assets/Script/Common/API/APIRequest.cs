@@ -7,7 +7,7 @@ public static class APIRequest
 {
 	private const string DOMAIN = "http://13.115.106.60:25566/";
 
-	public static async UniTask<T> SendRequesr<T>(string path, string param)
+	public static async UniTask<T> SendRequest<T>(string path, string param)
 	{
 		using (UnityWebRequest req = new UnityWebRequest(DOMAIN + path, UnityWebRequest.kHttpVerbPOST))
 		{

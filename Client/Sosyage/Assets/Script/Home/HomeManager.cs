@@ -11,7 +11,7 @@ public class HomeManager : MonoBehaviour
 	async void Start()
     {
         welcomeText.text = $"Welcome, {GameManager.Instance.userData.name}!\r\n";
-		var res = await APIRequest.SendRequesr<LoginBonusClaimResponse>("login-bonus/claim", "{\"id\":\"" + GameManager.Instance.userData.id + "\"}");
+		var res = await APIRequest.SendRequest<LoginBonusClaimResponse>("login-bonus/claim", "{\"id\":\"" + GameManager.Instance.userData.id + "\"}");
 
 		welcomeText.text+= res.period.start + "から"+res.period.end + "までログインボーナス！\r\n";
 		welcomeText.text += "今日は" + res.currentDay + "日目！\r\n";
