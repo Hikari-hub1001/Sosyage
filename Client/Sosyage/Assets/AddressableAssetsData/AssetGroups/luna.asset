@@ -1,0 +1,311 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: luna
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: luna
+  m_GUID: 31d25df0454352d449479bacaeeef221
+  m_SerializeEntries:
+  - m_GUID: 025aa72a38097724ab60891b7fc4da74
+    m_Address: luna_20
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0bb084424f660e94485ea42cea0a95f0
+    m_Address: luna_3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c8b878d7f0180743b4388c16647e461
+    m_Address: luna_39
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 149d6ac50fd154a49beb1e563d72581d
+    m_Address: luna_16
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1cf48fa4440c97242b4d3eeab9011763
+    m_Address: luna_4
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20180561f6b194a419e7ba4d6225d51b
+    m_Address: luna_26
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 248e63346da584b4a93ee2f80b961a1a
+    m_Address: luna_14
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2fd6bb07938c63b49a332895080f0b30
+    m_Address: luna_13
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b07b113429daf847b7a2a99a982deec
+    m_Address: luna_8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4bb53a3584c21954391757fcc54720b8
+    m_Address: luna_45
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54e48212282677642b851b9677fc2e0e
+    m_Address: luna_29
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 556abb327ee757a47b0a9a070e73dd83
+    m_Address: luna_11
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5cd239a36ce85a54ab862e8490cf0f53
+    m_Address: luna_30
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d39c5aaad55261428eb585ae2857ee5
+    m_Address: luna_40
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 68b45c66f9175924c9f2cf3c6b935463
+    m_Address: luna_17
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 719913eadb87eb247b8933a2eac31e6a
+    m_Address: luna_43
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73d494c04ee5bbc4e853f038e4b68d0b
+    m_Address: luna_19
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73d802c27e978184f9cdd7bec4e3d508
+    m_Address: luna_48
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7661a8fbda85de9459189e4a4bea7d1d
+    m_Address: luna_41
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7756d9012814e344fb132d90ada65097
+    m_Address: luna_34
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7949ec3462040f04c8164099720dadc8
+    m_Address: luna_46
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7df9cf4bba432f941b1560d879d8c1f8
+    m_Address: luna_7
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 85418000e8b75b14d83ec4af1afc87de
+    m_Address: luna_33
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87dafc64608971240ba4f5029949348d
+    m_Address: luna_23
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a8f181333f704449af65a39d8783816
+    m_Address: luna_6
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ed9235a441ee7341b34c50847b010dd
+    m_Address: luna_44
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f6ec6068988fc84d951fc4879849a57
+    m_Address: luna_18
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90c91dc1cb48c474b9bc47e91ff4fb18
+    m_Address: luna_22
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96fb9ed1888da314aafdc0a7037374b8
+    m_Address: luna_10
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97a03b2f7f1d1ed4b8bdb55cb0417e68
+    m_Address: luna_32
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 98a7972ea9601cd42a5246ae6b956383
+    m_Address: luna_36
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ede05640e51ffd4c840c3fd1d455eb3
+    m_Address: luna_5
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a01a1abc853859043b7f03c790aa6349
+    m_Address: luna_2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2c1c008fecbab445a04364a37ba1c9f
+    m_Address: luna_37
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a4ca3647b0f6cea44a311e2414e531b3
+    m_Address: luna_27
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b2a3b95b8dbb89445ab1b67a3f48c1ab
+    m_Address: luna_15
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b763c268cb2eeb842984b105d578dfbd
+    m_Address: luna_9
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b78b5f484c5aecc4490f96864094e65f
+    m_Address: luna_38
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c460791f92b06e04592a56d553fa06b4
+    m_Address: luna_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cfe589b41ebe7f342b316075ae6f0b49
+    m_Address: luna_35
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd5818103a3dc2f4b9ecd729b3c0db07
+    m_Address: luna_21
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df1d7f9a19c3a2e469423c7378d1bd9e
+    m_Address: luna_25
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df34513dc85c0724fa79710f90c5f4af
+    m_Address: luna_12
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e61d01049561f414780e7dc6adcc3ed4
+    m_Address: luna_42
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e694f468f5ba735489f1f66bc02fd1f2
+    m_Address: luna_24
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9bfde7f2a98aae4ca2649f89af42ebf
+    m_Address: luna_47
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ea71b4f31ffb31c46af285b6651ab547
+    m_Address: luna_31
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f56bb5130c887174cab7f771b91ed779
+    m_Address: luna_28
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Remote
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 01075da742345c24ca91afe5097a7839, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 6ae134fc4662c4d478c972ab23193a8f, type: 2}
+    - {fileID: 11400000, guid: 9f9c808ef29b97a4dac496232bb71db8, type: 2}

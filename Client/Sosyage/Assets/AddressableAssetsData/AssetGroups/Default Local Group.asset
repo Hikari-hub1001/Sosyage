@@ -14,7 +14,62 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Default Local Group
   m_GUID: 8f259ecff863dd5478f1eb119ec3632e
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 27b20c29f2327d64eb92c59268c7b06d
+    m_Address: 170047
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 408a2cf475d6d8e4d8236066add8f250
+    m_Address: 133409
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7aea57d613f3c04419d967dcb062ddff
+    m_Address: 1685962021298
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d82b646267578d45bb03a75add90e35
+    m_Address: login-bonus_claim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b6798d206c19d64793d3deb98c05a74
+    m_Address: 1767237418421
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8377ad2fce6a2741a4898189c668b72
+    m_Address: 132238
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac59259c798caa547839b425af3e178c
+    m_Address: 123613
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b4a9dab420304464386559e55e0c3eda
+    m_Address: 1709299071456
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db2f1478d6be108418aae197abbc1bfe
+    m_Address: 095400
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3465a1689415d047a69bfd6b30b215b
+    m_Address: 1697284421629
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eddd2efc6e49eee47beb6d18cfbb62d3
+    m_Address: 203949
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 01075da742345c24ca91afe5097a7839, type: 2}
   m_SchemaSet:
