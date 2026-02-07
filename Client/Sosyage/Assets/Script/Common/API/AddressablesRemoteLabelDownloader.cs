@@ -20,9 +20,9 @@ public static class AddressablesRemoteLabelDownloader
 		Addressables.InternalIdTransformFunc = (e) =>
 		{
 			//Debug.Log(e.InternalId);
-			if (e.InternalId.StartsWith("http://13.115.106.60:25566/Test"))
+			if (e.InternalId.StartsWith("ServerData"))
 			{
-				return e.InternalId.Replace("http://13.115.106.60:25566/Test",PATH);
+				return e.InternalId.Replace("ServerData", PATH);
 			}
 			return e.InternalId;
 		};

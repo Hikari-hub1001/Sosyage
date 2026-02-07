@@ -80,7 +80,7 @@ MonoBehaviour:
       - m_Id: 8a7a9c7ba9b65f44d9d9c9affd0ef4be
         m_Value: 'ServerData/[BuildTarget]'
       - m_Id: b43cfaba9d9e55b4d91f8ad86a2af2d8
-        m_Value: 'ServerData/[BuildTarget]'
+        m_Value: ServerData
       - m_Id: baf3a8ab82e281946989b30eb0ee7ff7
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
       - m_Id: ef99ae5ce66c484468b9006ef51dc18c
