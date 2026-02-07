@@ -27,16 +27,16 @@ echo [Addressables] Method: %EXEC_METHOD%
 echo.
 
 REM ビルド前に消したいフォルダ（プロジェクト直下からの相対パス）
-set "CLEAN_DIR=ServerData"
+set "CLEAN_DIR=ServerData\"
 
 echo 先にフォルダ削除
 set "TARGET=%PROJECT_PATH%\%CLEAN_DIR%"
-REM if exist "%TARGET%" (
-REM  echo [PreClean] Delete "%TARGET%"
-REM  rmdir /s /q "%TARGET%"
-REM ) else (
-REM  echo [PreClean] Skip (not found) "%TARGET%"
-REM )
+if exist "%TARGET%" (
+ echo [PreClean] Delete %TARGET%
+ rmdir /s /q "%TARGET%"
+) else (
+ echo [PreClean] Skip (not found) %TARGET%
+)
 
 echo ====== Unity バッチ実行 ======
 "%UNITY_EXE%" ^
