@@ -18,6 +18,6 @@ public sealed class AssetsItemController : ControllerBase
     public IActionResult List()
     {
         var items = _assetItemService.ListItems();
-        return Ok(items);
+        return Ok(new { items });
     }
 }

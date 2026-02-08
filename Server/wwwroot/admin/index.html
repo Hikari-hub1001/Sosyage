@@ -98,6 +98,21 @@
                     <form id="login-bonus-form">
                         <div class="grid">
                             <label>
+                                既存ログボ
+                                <select id="login-bonus-select"></select>
+                            </label>
+                            <label>
+                                名称
+                                <input type="text" id="login-bonus-name" required>
+                            </label>
+                            <label>
+                                種別
+                                <select id="login-bonus-type">
+                                    <option value="monthly">monthly</option>
+                                    <option value="event">event</option>
+                                </select>
+                            </label>
+                            <label data-mode="monthly">
                                 月(YYYY-MM-01)
                                 <input type="date" id="month" required>
                             </label>
@@ -111,7 +126,7 @@
                             </label>
                         </div>
 
-                        <div class="calendar">
+                        <div class="calendar mode-monthly" id="login-bonus-calendar">
                             <div class="calendar-header">
                                 <span>日</span>
                                 <span>月</span>
@@ -122,6 +137,14 @@
                                 <span>土</span>
                             </div>
                             <div id="calendar" class="calendar-grid"></div>
+                        </div>
+
+                        <div class="event-list mode-event is-hidden" id="event-list">
+                            <div class="event-list-header">
+                                <h3>日付リスト</h3>
+                                <button type="button" class="ghost" id="event-add">日付を追加</button>
+                            </div>
+                            <div id="event-days" class="event-days"></div>
                         </div>
 
                         <div class="actions">

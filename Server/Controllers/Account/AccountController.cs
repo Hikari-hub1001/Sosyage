@@ -17,6 +17,11 @@ public sealed class AccountController : ControllerBase
     [HttpPost("registration")]
     public IActionResult Registration([FromBody] RegistrationRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest(new { error = "name is required" });
+        }
+
         var id = _accountService.Register(request.Name);
         return Ok(new { id, name = request.Name });
     }

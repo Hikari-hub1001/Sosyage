@@ -14,8 +14,28 @@ public static class Application
     /// <param name="args"></param>
     public static void Main(string[] args)
     {
+        var app = BuildApp(args);
+
+        ConfigureSwagger(app);
+        ConfigureStaticFiles(app);
+        EnsureDatabase(app);
+
+        app.MapControllers();
+        app.Run("http://0.0.0.0:5000");
+    }
+
+    private static WebApplication BuildApp(string[] args)
+    {
         var builder = WebApplication.CreateBuilder(args);
 
+        ConfigureLogging(builder);
+        ConfigureServices(builder);
+
+        return builder.Build();
+    }
+
+    private static void ConfigureLogging(WebApplicationBuilder builder)
+    {
         var logFilePath = Path.Combine(builder.Environment.ContentRootPath, "Log", "app.log");
         builder.Logging.ClearProviders();
         builder.Logging.AddSimpleConsole(options =>
@@ -27,7 +47,10 @@ public static class Application
         {
             FilePath = logFilePath
         }));
+    }
 
+    private static void ConfigureServices(WebApplicationBuilder builder)
+    {
         builder.Services.AddControllers(options =>
         {
             options.Filters.Add<ApiVersionResponseFilter>();
@@ -38,12 +61,19 @@ public static class Application
         builder.Services.AddSwaggerGen();
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=db/app.db"));
         builder.Services.AddAppServices();
+    }
 
-        var app = builder.Build();
+    private static void ConfigureSwagger(WebApplication app)
+    {
+        // if (app.Environment.IsDevelopment()) // テスト段階なので常に有効化
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+    }
 
-        app.UseSwagger();
-        app.UseSwaggerUI();
-
+    private static void ConfigureStaticFiles(WebApplication app)
+    {
         var adminRoot = Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "admin");
         var adminFileProvider = new PhysicalFileProvider(adminRoot);
         var staticRoot = Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "static");
@@ -72,15 +102,12 @@ public static class Application
         {
             ContentTypeProvider = contentTypeProvider
         });
+    }
 
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            db.Database.EnsureCreated();
-        }
-
-        app.MapControllers();
-
-        app.Run("http://0.0.0.0:5000");
+    private static void EnsureDatabase(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.EnsureCreated();
     }
 }

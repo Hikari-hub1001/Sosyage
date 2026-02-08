@@ -2,7 +2,9 @@ namespace Server.Services.LoginBonus;
 
 public sealed record LoginBonusRegistration
 {
-    public string Month { get; init; } = "";
+    public long Id { get; init; }
+    public string Name { get; init; } = "";
+    public string Type { get; init; } = "";
     public string StartDate { get; init; } = "";
     public string EndDate { get; init; } = "";
     public List<LoginBonusDay> Days { get; init; } = new();
@@ -10,19 +12,19 @@ public sealed record LoginBonusRegistration
 
 public sealed record LoginBonusDay
 {
-    public int DayNumber { get; init; }
+    public string Date { get; init; } = "";
     public List<LoginBonusReward> Rewards { get; init; } = new();
 }
 
 public sealed record LoginBonusReward
 {
-    public int RewardId { get; init; }
+    public long ItemId { get; init; }
     public int Quantity { get; init; }
 }
 
 public sealed record LoginBonusClaimRequest
 {
-    public long id { get; init; }
+    public long Id { get; init; }
 }
 
 public sealed record LoginBonusClaimResponse
@@ -46,6 +48,12 @@ public sealed record LoginBonusDailyBonus
 
 public sealed record LoginBonusItemBonus
 {
-    public int Id { get; init; }
+    public long Id { get; init; }
     public int Quantity { get; init; }
+}
+
+public sealed record LoginBonusSummary
+{
+    public long Id { get; init; }
+    public string Name { get; init; } = "";
 }

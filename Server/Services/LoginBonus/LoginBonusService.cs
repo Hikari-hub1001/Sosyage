@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using EntityLoginBonusDay = Server.Data.Entities.LoginBonusDay;
 using EntityLoginBonusDayReward = Server.Data.Entities.LoginBonusDayReward;
-using EntityLoginBonusMonth = Server.Data.Entities.LoginBonusMonth;
+using EntityLoginBonus = Server.Data.Entities.LoginBonus;
+using EntityReward = Server.Data.Entities.Reward;
 
 namespace Server.Services.LoginBonus;
 
@@ -19,6 +20,19 @@ public sealed class LoginBonusService : ILoginBonusService
         _db = db;
     }
 
+    public IReadOnlyList<LoginBonusSummary> ListSummaries()
+    {
+        return _db.LoginBonuses
+            .AsNoTracking()
+            .OrderBy(bonus => bonus.Id)
+            .Select(bonus => new LoginBonusSummary
+            {
+                Id = bonus.Id,
+                Name = bonus.Name
+            })
+            .ToList();
+    }
+
     public long Register(LoginBonusRegistration request)
     {
         Validate(request);
@@ -26,66 +40,81 @@ public sealed class LoginBonusService : ILoginBonusService
         using var transaction = _db.Database.BeginTransaction();
         try
         {
-            var month = _db.LoginBonusMonths
-                .Include(m => m.Days)
-                .ThenInclude(d => d.Rewards)
-                .SingleOrDefault(m => m.Month == request.Month);
-
-            if (month is null)
+            EntityLoginBonus? loginBonus = null;
+            if (request.Id > 0)
             {
-                month = new EntityLoginBonusMonth
+                loginBonus = _db.LoginBonuses
+                    .Include(bonus => bonus.Days)
+                    .ThenInclude(day => day.Rewards)
+                    .SingleOrDefault(bonus => bonus.Id == request.Id);
+
+                if (loginBonus is null)
                 {
-                    Month = request.Month,
+                    throw new InvalidOperationException("login bonus not found");
+                }
+            }
+
+            if (loginBonus is null)
+            {
+                loginBonus = new EntityLoginBonus
+                {
+                    Name = request.Name,
+                    Type = request.Type,
                     StartDate = request.StartDate,
                     EndDate = request.EndDate
                 };
             }
             else
             {
-                month.StartDate = request.StartDate;
-                month.EndDate = request.EndDate;
+                loginBonus.Name = request.Name;
+                loginBonus.Type = request.Type;
+                loginBonus.StartDate = request.StartDate;
+                loginBonus.EndDate = request.EndDate;
 
-                if (month.Days.Count > 0)
+                if (loginBonus.Days.Count > 0)
                 {
-                    var rewards = month.Days.SelectMany(d => d.Rewards).ToList();
-                    if (rewards.Count > 0)
+                    var dayRewards = loginBonus.Days.SelectMany(day => day.Rewards).ToList();
+                    if (dayRewards.Count > 0)
                     {
-                        _db.LoginBonusDayRewards.RemoveRange(rewards);
+                        _db.LoginBonusDayRewards.RemoveRange(dayRewards);
                     }
 
-                    _db.LoginBonusDays.RemoveRange(month.Days);
-                    month.Days.Clear();
+                    _db.LoginBonusDays.RemoveRange(loginBonus.Days);
+                    loginBonus.Days.Clear();
                 }
             }
+
+            var rewardCache = new Dictionary<(long ItemId, int Quantity), EntityReward>();
 
             foreach (var day in request.Days)
             {
                 var dayEntity = new EntityLoginBonusDay
                 {
-                    DayNumber = day.DayNumber
+                    Date = day.Date
                 };
 
                 foreach (var reward in day.Rewards)
                 {
+                    var rewardEntity = FindOrCreateReward(rewardCache, reward.ItemId, reward.Quantity);
                     dayEntity.Rewards.Add(new EntityLoginBonusDayReward
                     {
-                        RewardId = reward.RewardId,
-                        Quantity = reward.Quantity
+                        Reward = rewardEntity,
+                        RewardId = rewardEntity.Id
                     });
                 }
 
-                month.Days.Add(dayEntity);
+                loginBonus.Days.Add(dayEntity);
             }
 
-            if (month.Id == 0)
+            if (loginBonus.Id == 0)
             {
-                _db.LoginBonusMonths.Add(month);
+                _db.LoginBonuses.Add(loginBonus);
             }
 
             _db.SaveChanges();
 
             transaction.Commit();
-            return month.Id;
+            return loginBonus.Id;
         }
         catch
         {
@@ -94,35 +123,36 @@ public sealed class LoginBonusService : ILoginBonusService
         }
     }
 
-    public LoginBonusRegistration? FindByMonth(string month)
+    public LoginBonusRegistration? FindById(long id)
     {
-        if (string.IsNullOrWhiteSpace(month))
+        if (id <= 0)
         {
             return null;
         }
 
-        var monthEntity = _db.LoginBonusMonths
+        var loginBonus = _db.LoginBonuses
             .AsNoTracking()
-            .Include(m => m.Days)
-            .ThenInclude(d => d.Rewards)
-            .SingleOrDefault(m => m.Month == month);
+            .Include(bonus => bonus.Days)
+            .ThenInclude(day => day.Rewards)
+            .ThenInclude(reward => reward.Reward)
+            .SingleOrDefault(bonus => bonus.Id == id);
 
-        if (monthEntity is null)
+        if (loginBonus is null)
         {
             return null;
         }
 
-        var days = monthEntity.Days
-            .OrderBy(day => day.DayNumber)
+        var days = loginBonus.Days
+            .OrderBy(day => day.Date)
             .Select(day => new LoginBonusDay
             {
-                DayNumber = day.DayNumber,
+                Date = day.Date,
                 Rewards = day.Rewards
                     .OrderBy(reward => reward.RewardId)
                     .Select(reward => new LoginBonusReward
                     {
-                        RewardId = reward.RewardId,
-                        Quantity = reward.Quantity
+                        ItemId = reward.Reward?.ItemId ?? 0,
+                        Quantity = reward.Reward?.Quantity ?? 0
                     })
                     .ToList()
             })
@@ -130,16 +160,18 @@ public sealed class LoginBonusService : ILoginBonusService
 
         return new LoginBonusRegistration
         {
-            Month = monthEntity.Month,
-            StartDate = monthEntity.StartDate,
-            EndDate = monthEntity.EndDate,
+            Id = loginBonus.Id,
+            Name = loginBonus.Name,
+            Type = loginBonus.Type,
+            StartDate = loginBonus.StartDate,
+            EndDate = loginBonus.EndDate,
             Days = days
         };
     }
 
-    public bool DeleteByMonth(string month)
+    public bool DeleteById(long id)
     {
-        if (string.IsNullOrWhiteSpace(month))
+        if (id <= 0)
         {
             return false;
         }
@@ -147,28 +179,28 @@ public sealed class LoginBonusService : ILoginBonusService
         using var transaction = _db.Database.BeginTransaction();
         try
         {
-            var monthEntity = _db.LoginBonusMonths
-                .Include(m => m.Days)
-                .ThenInclude(d => d.Rewards)
-                .SingleOrDefault(m => m.Month == month);
+            var loginBonus = _db.LoginBonuses
+                .Include(bonus => bonus.Days)
+                .ThenInclude(day => day.Rewards)
+                .SingleOrDefault(bonus => bonus.Id == id);
 
-            if (monthEntity is null)
+            if (loginBonus is null)
             {
                 return false;
             }
 
-            if (monthEntity.Days.Count > 0)
+            if (loginBonus.Days.Count > 0)
             {
-                var rewards = monthEntity.Days.SelectMany(day => day.Rewards).ToList();
-                if (rewards.Count > 0)
+                var dayRewards = loginBonus.Days.SelectMany(day => day.Rewards).ToList();
+                if (dayRewards.Count > 0)
                 {
-                    _db.LoginBonusDayRewards.RemoveRange(rewards);
+                    _db.LoginBonusDayRewards.RemoveRange(dayRewards);
                 }
 
-                _db.LoginBonusDays.RemoveRange(monthEntity.Days);
+                _db.LoginBonusDays.RemoveRange(loginBonus.Days);
             }
 
-            _db.LoginBonusMonths.Remove(monthEntity);
+            _db.LoginBonuses.Remove(loginBonus);
             _db.SaveChanges();
             transaction.Commit();
             return true;
@@ -189,57 +221,78 @@ public sealed class LoginBonusService : ILoginBonusService
 
         var jstNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TokyoTimeZone);
         var today = DateOnly.FromDateTime(jstNow.DateTime);
-        var monthKey = new DateOnly(today.Year, today.Month, 1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var todayText = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var todayKey = today.Year * 10000 + (today.Month * 100) + today.Day;
 
-        var monthEntity = _db.LoginBonusMonths
-            .Include(m => m.Days)
-            .ThenInclude(d => d.Rewards)
-            .SingleOrDefault(m => m.Month == monthKey);
+        var loginBonusHeader = _db.LoginBonuses
+            .AsNoTracking()
+            .Select(bonus => new
+            {
+                bonus.Id,
+                bonus.StartDate,
+                bonus.EndDate
+            })
+            .ToList()
+            .Where(bonus =>
+                string.Compare(bonus.StartDate, todayText, StringComparison.Ordinal) <= 0 &&
+                string.Compare(bonus.EndDate, todayText, StringComparison.Ordinal) >= 0)
+            .OrderByDescending(bonus => bonus.StartDate)
+            .FirstOrDefault();
 
-        if (monthEntity is null)
+        var loginBonus = loginBonusHeader is null
+            ? null
+            : _db.LoginBonuses
+                .Include(bonus => bonus.Days)
+                .ThenInclude(day => day.Rewards)
+                .ThenInclude(reward => reward.Reward)
+                .SingleOrDefault(bonus => bonus.Id == loginBonusHeader.Id);
+
+        if (loginBonus is null)
         {
             return null;
         }
 
-        var dayList = monthEntity.Days
-            .OrderBy(day => day.DayNumber)
+        var dayList = loginBonus.Days
+            .OrderBy(day => day.Date)
             .ToList();
-        var maxDayNumber = dayList.LastOrDefault()?.DayNumber ?? 0;
-        var dailyBonuses = BuildDailyBonuses(dayList, maxDayNumber);
+        var dailyBonuses = BuildDailyBonuses(dayList);
 
         var accountBonus = _db.AccountLoginBonuses
-            .SingleOrDefault(b => b.AccountId == accountId && b.MonthId == monthEntity.Id);
+            .SingleOrDefault(bonus => bonus.AccountId == accountId && bonus.LoginBonusId == loginBonus.Id);
 
-        var currentDay = accountBonus?.CurrentDay ?? 0;
-        // 期間外なら付与せず、データのみ返す。
-        if (!IsWithinPeriod(today, monthEntity.StartDate, monthEntity.EndDate))
-        {
-            return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, false);
-        }
-
+        var claimCount = accountBonus?.ClaimCount ?? 0;
         // すでに本日付与済みなら、現在の状態を返す。
-        if (accountBonus?.LastClaimedDay == today.Day)
+        if (accountBonus?.LastClaimedDay == todayKey)
         {
-            return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, false);
+            return BuildClaimResponse(loginBonus, claimCount, dailyBonuses, false);
         }
 
-        var nextDayNumber = GetNextDayNumber(dayList, currentDay);
-        // 次の報酬日がない場合は、現在の状態を返す。
-        if (!nextDayNumber.HasValue)
+        var eligibleDays = dayList
+            .Where(day => string.Compare(day.Date, todayText, StringComparison.Ordinal) <= 0)
+            .ToList();
+
+        // 付与対象がなければ現在の状態を返す。
+        if (eligibleDays.Count <= claimCount)
         {
-            return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, false);
+            return BuildClaimResponse(loginBonus, claimCount, dailyBonuses, false);
         }
 
-        currentDay = PersistClaim(accountId, monthEntity, accountBonus, nextDayNumber.Value, today.Day, jstNow);
+        var nextDay = eligibleDays[claimCount];
+        claimCount = PersistClaim(accountId, loginBonus, accountBonus, nextDay, claimCount + 1, todayKey, jstNow);
 
-        return BuildClaimResponse(monthEntity, currentDay, dailyBonuses, true);
+        return BuildClaimResponse(loginBonus, claimCount, dailyBonuses, true);
     }
 
     private static void Validate(LoginBonusRegistration request)
     {
-        if (string.IsNullOrWhiteSpace(request.Month))
+        if (string.IsNullOrWhiteSpace(request.Name))
         {
-            throw new ArgumentException("month is required", nameof(request));
+            throw new ArgumentException("name is required", nameof(request));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Type))
+        {
+            throw new ArgumentException("type is required", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.StartDate))
@@ -254,16 +307,16 @@ public sealed class LoginBonusService : ILoginBonusService
 
         foreach (var day in request.Days)
         {
-            if (day.DayNumber <= 0)
+            if (string.IsNullOrWhiteSpace(day.Date))
             {
-                throw new ArgumentException("dayNumber must be >= 1", nameof(request));
+                throw new ArgumentException("date is required", nameof(request));
             }
 
             foreach (var reward in day.Rewards)
             {
-                if (reward.RewardId <= 0)
+                if (reward.ItemId <= 0)
                 {
-                    throw new ArgumentException("rewardId must be >= 1", nameof(request));
+                    throw new ArgumentException("itemId must be >= 1", nameof(request));
                 }
 
                 if (reward.Quantity <= 0)
@@ -274,25 +327,17 @@ public sealed class LoginBonusService : ILoginBonusService
         }
     }
 
-    private static List<LoginBonusDailyBonus> BuildDailyBonuses(List<EntityLoginBonusDay> days, int maxDayNumber)
+    private static List<LoginBonusDailyBonus> BuildDailyBonuses(List<EntityLoginBonusDay> days)
     {
-        var result = new List<LoginBonusDailyBonus>(Math.Max(0, maxDayNumber));
-        var dayMap = days.ToDictionary(day => day.DayNumber, day => day);
-
-        for (var dayNumber = 1; dayNumber <= maxDayNumber; dayNumber += 1)
+        var result = new List<LoginBonusDailyBonus>(days.Count);
+        foreach (var day in days)
         {
-            if (!dayMap.TryGetValue(dayNumber, out var day))
-            {
-                result.Add(new LoginBonusDailyBonus());
-                continue;
-            }
-
             var bonuses = day.Rewards
                 .OrderBy(reward => reward.RewardId)
                 .Select(reward => new LoginBonusItemBonus
                 {
-                    Id = reward.RewardId,
-                    Quantity = reward.Quantity
+                    Id = reward.Reward?.ItemId ?? reward.RewardId,
+                    Quantity = reward.Reward?.Quantity ?? 0
                 })
                 .ToList();
 
@@ -305,37 +350,9 @@ public sealed class LoginBonusService : ILoginBonusService
         return result;
     }
 
-    private static int? GetNextDayNumber(List<EntityLoginBonusDay> days, int currentDay)
-    {
-        foreach (var day in days)
-        {
-            if (day.DayNumber > currentDay)
-            {
-                return day.DayNumber;
-            }
-        }
-
-        return null;
-    }
-
-    private static bool IsWithinPeriod(DateOnly today, string startDateText, string endDateText)
-    {
-        if (!DateOnly.TryParseExact(startDateText, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate))
-        {
-            return false;
-        }
-
-        if (!DateOnly.TryParseExact(endDateText, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDate))
-        {
-            return false;
-        }
-
-        return today >= startDate && today <= endDate;
-    }
-
     private static LoginBonusClaimResponse BuildClaimResponse(
-        EntityLoginBonusMonth monthEntity,
-        int currentDay,
+        EntityLoginBonus loginBonus,
+        int claimCount,
         List<LoginBonusDailyBonus> dailyBonuses,
         bool claimedThisRequest)
     {
@@ -343,10 +360,10 @@ public sealed class LoginBonusService : ILoginBonusService
         {
             Period = new LoginBonusPeriod
             {
-                Start = monthEntity.StartDate,
-                End = monthEntity.EndDate
+                Start = loginBonus.StartDate,
+                End = loginBonus.EndDate
             },
-            CurrentDay = currentDay,
+            CurrentDay = claimCount,
             IsClaimedThisRequest = claimedThisRequest,
             DailyBonuses = dailyBonuses
         };
@@ -354,10 +371,11 @@ public sealed class LoginBonusService : ILoginBonusService
 
     private int PersistClaim(
         long accountId,
-        EntityLoginBonusMonth monthEntity,
+        EntityLoginBonus loginBonus,
         Data.Entities.AccountLoginBonus? accountBonus,
-        int dayNumber,
-        int todayDay,
+        EntityLoginBonusDay nextDay,
+        int nextClaimCount,
+        int todayKey,
         DateTimeOffset jstNow)
     {
         using var transaction = _db.Database.BeginTransaction();
@@ -368,38 +386,67 @@ public sealed class LoginBonusService : ILoginBonusService
                 accountBonus = new Data.Entities.AccountLoginBonus
                 {
                     AccountId = accountId,
-                    MonthId = monthEntity.Id
+                    LoginBonusId = loginBonus.Id
                 };
                 _db.AccountLoginBonuses.Add(accountBonus);
             }
 
-            accountBonus.CurrentDay = dayNumber;
-            accountBonus.LastClaimedDay = todayDay;
+            accountBonus.ClaimCount = nextClaimCount;
+            accountBonus.LastClaimedDay = todayKey;
 
             var logExists = _db.AccountLoginBonusLogs.Any(log =>
                 log.AccountId == accountId &&
-                log.MonthId == monthEntity.Id &&
-                log.DayNumber == dayNumber);
+                log.LoginBonusId == loginBonus.Id &&
+                log.LoginBonusDayId == nextDay.Id);
 
             if (!logExists)
             {
                 _db.AccountLoginBonusLogs.Add(new Data.Entities.AccountLoginBonusLog
                 {
                     AccountId = accountId,
-                    MonthId = monthEntity.Id,
-                    DayNumber = dayNumber,
+                    LoginBonusId = loginBonus.Id,
+                    LoginBonusDayId = nextDay.Id,
+                    ClaimCount = nextClaimCount,
                     ClaimedAt = jstNow.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture)
                 });
             }
 
             _db.SaveChanges();
             transaction.Commit();
-            return accountBonus.CurrentDay;
+            return accountBonus.ClaimCount;
         }
         catch
         {
             transaction.Rollback();
             throw;
         }
+    }
+
+    private EntityReward FindOrCreateReward(Dictionary<(long ItemId, int Quantity), EntityReward> cache, long itemId, int quantity)
+    {
+        var key = (itemId, quantity);
+        if (cache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        var reward = _db.Rewards.SingleOrDefault(r =>
+            r.Type == "item" &&
+            r.ItemId == itemId &&
+            r.Quantity == quantity);
+
+        if (reward is null)
+        {
+            reward = new EntityReward
+            {
+                Type = "item",
+                ItemId = itemId,
+                Quantity = quantity
+            };
+            _db.Rewards.Add(reward);
+        }
+
+        cache[key] = reward;
+        return reward;
     }
 }

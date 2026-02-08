@@ -192,6 +192,11 @@ label {
     color: #374151;
 }
 
+.inline-actions {
+    display: flex;
+    align-items: flex-end;
+}
+
 input {
     padding: 4px 4px;
     border-radius: 8px;
@@ -210,6 +215,49 @@ select {
 .calendar {
     display: grid;
     gap: 12px;
+}
+
+.is-hidden {
+    display: none;
+}
+
+.event-list {
+    display: grid;
+    gap: 12px;
+}
+
+.event-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.event-days {
+    display: grid;
+    gap: 12px;
+}
+
+.event-day {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px;
+    background: #f8fafc;
+    display: grid;
+    gap: 10px;
+}
+
+.event-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.event-day-index {
+    font-weight: 600;
 }
 
 .calendar-header {

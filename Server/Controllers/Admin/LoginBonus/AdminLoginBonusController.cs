@@ -15,62 +15,73 @@ public sealed class AdminLoginBonusController : ControllerBase
         _service = service;
     }
 
+    [HttpGet("list")]
+    public IActionResult List()
+    {
+        var items = _service.ListSummaries();
+        return Ok(new { items });
+    }
+
     [HttpPost]
     public IActionResult Register([FromBody] LoginBonusRegistration request)
     {
         try
         {
-            var monthId = _service.Register(request);
-            return Ok(new { monthId });
+            var loginBonusId = _service.Register(request);
+            return Ok(new { loginBonusId });
         }
         catch (ArgumentException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
+        catch (InvalidOperationException)
+        {
+            return NotFound(new { error = "login bonus not found" });
+        }
         catch (DbUpdateException)
         {
-            return Conflict(new { error = "month already exists" });
+            return Conflict(new { error = "login bonus already exists" });
         }
     }
 
     [HttpGet]
-    public IActionResult GetByMonth([FromQuery] string month)
+    public IActionResult GetById([FromQuery] long id)
     {
-        if (string.IsNullOrWhiteSpace(month))
+        if (id <= 0)
         {
-            return BadRequest(new { error = "month is required" });
+            return BadRequest(new { error = "id is required" });
         }
 
-        var data = _service.FindByMonth(month);
+        var data = _service.FindById(id);
         if (data is null)
         {
-            return NotFound(new { error = "month not found" });
+            return NotFound(new { error = "login bonus not found" });
         }
 
         return Ok(data);
     }
 
     [HttpDelete]
-    public IActionResult Delete([FromQuery] string month)
+    public IActionResult Delete([FromQuery] long id)
     {
-        if (string.IsNullOrWhiteSpace(month))
+        if (id <= 0)
         {
-            return BadRequest(new { error = "month is required" });
+            return BadRequest(new { error = "id is required" });
         }
 
         try
         {
-            var deleted = _service.DeleteByMonth(month);
+            var deleted = _service.DeleteById(id);
             if (!deleted)
             {
-                return NotFound(new { error = "month not found" });
+                return NotFound(new { error = "login bonus not found" });
             }
 
             return Ok(new { deleted = true });
         }
         catch (DbUpdateException)
         {
-            return Conflict(new { error = "month has related data" });
+            return Conflict(new { error = "login bonus has related data" });
         }
     }
 }

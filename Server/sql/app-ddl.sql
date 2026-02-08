@@ -6,54 +6,70 @@ CREATE TABLE account (
 );
 
 -- Login Bonus
-CREATE TABLE login_bonus_month (
+CREATE TABLE login_bonus (
     id INTEGER PRIMARY KEY,
-    month TEXT NOT NULL, -- YYYY-MM-DD (first day of month)
+    name TEXT NOT NULL,
     start_date TEXT NOT NULL, -- YYYY-MM-DD
     end_date TEXT NOT NULL, -- YYYY-MM-DD
-    UNIQUE (month)
+    type TEXT NOT NULL -- e.g. "monthly", "event"
 );
 
 CREATE TABLE login_bonus_day (
     id INTEGER PRIMARY KEY,
-    month_id INTEGER NOT NULL,
-    day_number INTEGER NOT NULL, -- 1..31
-    FOREIGN KEY (month_id) REFERENCES login_bonus_month(id)
+    login_bonus_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    FOREIGN KEY (login_bonus_id) REFERENCES login_bonus(id),
+    UNIQUE (login_bonus_id, date)
 );
-CREATE INDEX idx_login_bonus_day_month_id ON login_bonus_day(month_id);
+CREATE INDEX idx_login_bonus_day_login_bonus_id ON login_bonus_day(login_bonus_id);
 
 CREATE TABLE login_bonus_day_reward (
     id INTEGER PRIMARY KEY,
-    day_id INTEGER NOT NULL,
+    login_bonus_day_id INTEGER NOT NULL,
     reward_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL,
-    FOREIGN KEY (day_id) REFERENCES login_bonus_day(id)
+    FOREIGN KEY (login_bonus_day_id) REFERENCES login_bonus_day(id),
+    FOREIGN KEY (reward_id) REFERENCES reward(id),
+    UNIQUE (login_bonus_day_id, reward_id)
 );
-CREATE INDEX idx_login_bonus_day_reward_day_id ON login_bonus_day_reward(day_id);
+CREATE INDEX idx_login_bonus_day_reward_login_bonus_day_id ON login_bonus_day_reward(login_bonus_day_id);
 
 CREATE TABLE account_login_bonus (
     id INTEGER PRIMARY KEY,
     account_id INTEGER NOT NULL,
-    month_id INTEGER NOT NULL,
-    current_day INTEGER NOT NULL,
+    login_bonus_id INTEGER NOT NULL,
+    claim_count INTEGER NOT NULL,
     last_claimed_day INTEGER,
-    FOREIGN KEY (account_id) REFERENCES Account(id),
-    FOREIGN KEY (month_id) REFERENCES login_bonus_month(id),
-    UNIQUE (account_id, month_id)
+    FOREIGN KEY (account_id) REFERENCES account(id),
+    FOREIGN KEY (login_bonus_id) REFERENCES login_bonus(id),
+    UNIQUE (account_id, login_bonus_id)
 );
 CREATE INDEX idx_account_login_bonus_account_id ON account_login_bonus(account_id);
+CREATE INDEX idx_account_login_bonus_login_bonus_id ON account_login_bonus(login_bonus_id);
 
 CREATE TABLE account_login_bonus_log (
     id INTEGER PRIMARY KEY,
     account_id INTEGER NOT NULL,
-    month_id INTEGER NOT NULL,
-    day_number INTEGER NOT NULL,
+    login_bonus_id INTEGER NOT NULL,
+    login_bonus_day_id INTEGER NOT NULL,
+    claim_count INTEGER NOT NULL,
     claimed_at TEXT NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES Account(id),
-    FOREIGN KEY (month_id) REFERENCES login_bonus_month(id),
-    UNIQUE (account_id, month_id, day_number)
+    FOREIGN KEY (account_id) REFERENCES account(id),
+    FOREIGN KEY (login_bonus_id) REFERENCES login_bonus(id),
+    FOREIGN KEY (login_bonus_day_id) REFERENCES login_bonus_day(id),
+    UNIQUE (account_id, login_bonus_day_id)
 );
 CREATE INDEX idx_account_login_bonus_log_account_id ON account_login_bonus_log(account_id);
+
+-- Common Reward
+CREATE TABLE reward (
+    id INTEGER PRIMARY KEY,
+    type TEXT NOT NULL,
+    item_id INTEGER,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (item_id) REFERENCES item_master(id)
+);
+CREATE INDEX idx_reward_type ON reward(type);
+CREATE INDEX idx_reward_item_id ON reward(item_id);
 
 -- Item Master
 CREATE TABLE item_master (
