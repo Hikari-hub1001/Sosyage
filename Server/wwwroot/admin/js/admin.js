@@ -43,6 +43,18 @@ let assetsItemsLoaded = false;
 let loginBonusLoading = false;
 let loginBonusLoaded = false;
 
+function unwrapResponse(data) {
+    if (data && typeof data === "object") {
+        if ("response" in data) {
+            return data.response;
+        }
+        if ("Response" in data) {
+            return data.Response;
+        }
+    }
+    return data;
+}
+
 function pad2(value) {
     return String(value).padStart(2, "0");
 }
@@ -142,7 +154,7 @@ async function loadAssetsItems() {
             return;
         }
 
-        const data = await response.json();
+        const data = unwrapResponse(await response.json());
         const items = Array.isArray(data)
             ? data
             : Array.isArray(data.items ?? data.Items)
@@ -170,7 +182,7 @@ async function loadLoginBonusOptions(selectedId = null) {
             return;
         }
 
-        const data = await response.json();
+        const data = unwrapResponse(await response.json());
         const items = Array.isArray(data.items ?? data.Items) ? (data.items ?? data.Items) : [];
         const currentId = selectedId ?? getLoginBonusId();
 
@@ -540,7 +552,7 @@ async function loadLoginBonusById() {
             return;
         }
 
-        const data = await response.json();
+        const data = unwrapResponse(await response.json());
         applyLoginBonusData(data);
         setLoginBonusLoaded(true);
         if (loginBonusStatus) {
@@ -590,7 +602,7 @@ async function loadAccounts() {
             return;
         }
 
-        const data = await response.json();
+        const data = unwrapResponse(await response.json());
         accountTotal = Number(data.total ?? 0);
         const accounts = Array.isArray(data.accounts) ? data.accounts : [];
 
@@ -850,13 +862,14 @@ form.addEventListener("submit", async (event) => {
             // text is fine
         }
 
+        const responsePayload = unwrapResponse(data);
         if (!response.ok) {
             result.textContent = JSON.stringify({ status: response.status, data }, null, 2);
             return;
         }
 
         result.textContent = JSON.stringify({ status: response.status, data }, null, 2);
-        const loginBonusId = data.loginBonusId ?? data.LoginBonusId ?? null;
+        const loginBonusId = responsePayload?.loginBonusId ?? responsePayload?.LoginBonusId ?? null;
         if (loginBonusId != null) {
             await loadLoginBonusOptions(loginBonusId);
         } else {

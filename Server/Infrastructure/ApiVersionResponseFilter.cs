@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
@@ -8,12 +7,10 @@ namespace Server.Infrastructure;
 public sealed class ApiVersionResponseFilter : IResultFilter
 {
     private readonly VersionOptions _options;
-    private readonly JsonSerializerOptions _serializerOptions;
 
-    public ApiVersionResponseFilter(IOptions<VersionOptions> options, IOptions<JsonOptions> jsonOptions)
+    public ApiVersionResponseFilter(IOptions<VersionOptions> options)
     {
         _options = options.Value;
-        _serializerOptions = jsonOptions.Value.JsonSerializerOptions;
     }
 
     public void OnResultExecuting(ResultExecutingContext context)
@@ -23,94 +20,52 @@ public sealed class ApiVersionResponseFilter : IResultFilter
             return;
         }
 
-        if (!TryToDictionary(objectResult.Value, _serializerOptions, out var payload))
+        if (objectResult.Value is IDictionary<string, object?> dictionary &&
+            dictionary.ContainsKey("response"))
         {
-            payload = new Dictionary<string, object?>(StringComparer.Ordinal);
+            if (!dictionary.ContainsKey("appVersion"))
+            {
+                dictionary["appVersion"] = _options.AppVersion;
+            }
+
+            if (!dictionary.ContainsKey("assetVersion"))
+            {
+                dictionary["assetVersion"] = _options.AssetVersion;
+            }
+
+            objectResult.Value = dictionary;
+            return;
         }
 
-        if (!payload.ContainsKey("appVersion"))
+        if (objectResult.Value is IDictionary<string, object> dictionaryObjects &&
+            dictionaryObjects.ContainsKey("response"))
         {
-            payload["appVersion"] = _options.AppVersion;
+#pragma warning disable CS8620 // 参照型の NULL 値の許容の違いにより、パラメーターに引数を使用できません。
+            var payload = new Dictionary<string, object?>(dictionaryObjects, StringComparer.Ordinal);
+#pragma warning restore CS8620 // 参照型の NULL 値の許容の違いにより、パラメーターに引数を使用できません。
+            if (!payload.ContainsKey("appVersion"))
+            {
+                payload["appVersion"] = _options.AppVersion;
+            }
+
+            if (!payload.ContainsKey("assetVersion"))
+            {
+                payload["assetVersion"] = _options.AssetVersion;
+            }
+
+            objectResult.Value = payload;
+            return;
         }
 
-        if (!payload.ContainsKey("assetVersion"))
+        objectResult.Value = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
-            payload["assetVersion"] = _options.AssetVersion;
-        }
-
-        objectResult.Value = payload;
+            ["response"] = objectResult.Value,
+            ["appVersion"] = _options.AppVersion,
+            ["assetVersion"] = _options.AssetVersion
+        };
     }
 
     public void OnResultExecuted(ResultExecutedContext context)
     {
-    }
-
-    private static bool TryToDictionary(object? value, JsonSerializerOptions options, out Dictionary<string, object?> result)
-    {
-        if (value is null)
-        {
-            result = new Dictionary<string, object?>(StringComparer.Ordinal);
-            return true;
-        }
-
-        if (value is Dictionary<string, object?> dictionary)
-        {
-            result = new Dictionary<string, object?>(dictionary, StringComparer.Ordinal);
-            return true;
-        }
-
-        if (value is IDictionary<string, object?> dictionaryWithNulls)
-        {
-            result = new Dictionary<string, object?>(dictionaryWithNulls, StringComparer.Ordinal);
-            return true;
-        }
-
-        if (value is IDictionary<string, object> dictionaryObjects)
-        {
-            result = new Dictionary<string, object?>(StringComparer.Ordinal);
-            foreach (var item in dictionaryObjects)
-            {
-                result[item.Key] = item.Value;
-            }
-            return true;
-        }
-
-        var element = JsonSerializer.SerializeToElement(value, options);
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            result = ConvertToDictionary(element);
-            return true;
-        }
-
-        result = new Dictionary<string, object?>(StringComparer.Ordinal)
-        {
-            ["value"] = ConvertElement(element)
-        };
-        return true;
-    }
-
-    private static Dictionary<string, object?> ConvertToDictionary(JsonElement element)
-    {
-        var result = new Dictionary<string, object?>(StringComparer.Ordinal);
-        foreach (var property in element.EnumerateObject())
-        {
-            result[property.Name] = ConvertElement(property.Value);
-        }
-
-        return result;
-    }
-
-    private static object? ConvertElement(JsonElement element)
-    {
-        return element.ValueKind switch
-        {
-            JsonValueKind.Object => ConvertToDictionary(element),
-            JsonValueKind.Array => element.EnumerateArray().Select(ConvertElement).ToList(),
-            JsonValueKind.String => element.GetString(),
-            JsonValueKind.Number => element.TryGetInt64(out var number) ? number : element.GetDouble(),
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            _ => null
-        };
     }
 }
