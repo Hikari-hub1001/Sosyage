@@ -10,6 +10,7 @@ public sealed class AppDbContext : DbContext
     }
 
     public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<AccountItem> AccountItems => Set<AccountItem>();
     public DbSet<LoginBonus> LoginBonuses => Set<LoginBonus>();
     public DbSet<LoginBonusDay> LoginBonusDays => Set<LoginBonusDay>();
     public DbSet<LoginBonusDayReward> LoginBonusDayRewards => Set<LoginBonusDayReward>();
@@ -27,6 +28,22 @@ public sealed class AppDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Name).HasColumnName("name").IsRequired();
             entity.Property(e => e.LastLoginAt).HasColumnName("last_login_at").IsRequired();
+        });
+
+        modelBuilder.Entity<AccountItem>(entity =>
+        {
+            entity.ToTable("account_item");
+            entity.HasKey(e => new { e.AccountId, e.ItemId });
+            entity.Property(e => e.AccountId).HasColumnName("account_id").IsRequired();
+            entity.Property(e => e.ItemId).HasColumnName("item_id").IsRequired();
+            entity.Property(e => e.Quantity).HasColumnName("quantity").IsRequired();
+            entity.HasOne(e => e.Account)
+                .WithMany(e => e.Items)
+                .HasForeignKey(e => e.AccountId);
+            entity.HasOne(e => e.Item)
+                .WithMany()
+                .HasForeignKey(e => e.ItemId);
+            entity.HasIndex(e => e.ItemId).HasDatabaseName("idx_account_item_item_id");
         });
 
         modelBuilder.Entity<LoginBonus>(entity =>

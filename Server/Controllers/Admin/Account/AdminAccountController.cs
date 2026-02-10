@@ -35,6 +35,18 @@ public sealed class AdminAccountController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:long}")]
+    public IActionResult GetDetail(long id)
+    {
+        var result = _adminAccountService.GetAccountDetail(id);
+        if (result is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
+    }
+
     [HttpDelete("{id:long}")]
     public IActionResult Delete(long id)
     {

@@ -5,6 +5,16 @@ CREATE TABLE account (
     last_login_at TEXT NOT NULL
 );
 
+CREATE TABLE account_item (
+    account_id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    PRIMARY KEY (account_id, item_id),
+    FOREIGN KEY (account_id) REFERENCES account(id),
+    FOREIGN KEY (item_id) REFERENCES item_master(id)
+);
+CREATE INDEX idx_account_item_item_id ON account_item(item_id);
+
 -- Login Bonus
 CREATE TABLE login_bonus (
     id INTEGER PRIMARY KEY,

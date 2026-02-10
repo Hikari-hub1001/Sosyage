@@ -80,10 +80,80 @@
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>LastLoginAt</th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="account-table-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section class="view" data-view="account-detail">
+                <header class="page-header">
+                    <div class="section-header">
+                        <div>
+                            <h1>アカウント詳細</h1>
+                            <p id="account-detail-subtitle">読み込み中...</p>
+                        </div>
+                        <div class="header-actions">
+                            <button type="button" class="ghost" id="account-detail-back">戻る</button>
+                            <button type="button" class="ghost danger" id="account-detail-delete">削除</button>
+                        </div>
+                    </div>
+                </header>
+
+                <section class="card">
+                    <div class="grid">
+                        <div class="kv">
+                            <div class="kv-label">ID</div>
+                            <div class="kv-value" id="account-detail-id">-</div>
+                        </div>
+                        <div class="kv">
+                            <div class="kv-label">Name</div>
+                            <div class="kv-value" id="account-detail-name">-</div>
+                        </div>
+                        <div class="kv">
+                            <div class="kv-label">LastLoginAt</div>
+                            <div class="kv-value" id="account-detail-last-login-at">-</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="section-header">
+                        <h2>所持アイテム</h2>
+                        <div class="status" id="account-detail-items-status"></div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ItemId</th>
+                                    <th>Name</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="account-detail-items-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="section-header">
+                        <h2>ログイン履歴</h2>
+                        <div class="status" id="account-detail-history-status"></div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ClaimedAt</th>
+                                    <th>LoginBonus</th>
+                                    <th>Date</th>
+                                    <th>ClaimCount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="account-detail-history-body"></tbody>
                         </table>
                     </div>
                 </section>

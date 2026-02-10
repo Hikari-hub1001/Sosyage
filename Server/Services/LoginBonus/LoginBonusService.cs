@@ -401,6 +401,40 @@ public sealed class LoginBonusService : ILoginBonusService
 
             if (!logExists)
             {
+                var itemRewards = nextDay.Rewards
+                    .Select(reward => reward.Reward)
+                    .Where(reward => reward is not null && reward.Type == "item" && reward.ItemId.HasValue)
+                    .Select(reward => new { ItemId = reward!.ItemId!.Value, reward!.Quantity })
+                    .GroupBy(reward => reward.ItemId)
+                    .Select(group => new { ItemId = group.Key, Quantity = group.Sum(reward => reward.Quantity) })
+                    .ToList();
+
+                if (itemRewards.Count > 0)
+                {
+                    var itemIds = itemRewards.Select(reward => reward.ItemId).ToList();
+                    var existingItems = _db.AccountItems
+                        .Where(item => item.AccountId == accountId && itemIds.Contains(item.ItemId))
+                        .ToList();
+
+                    var existingByItemId = existingItems.ToDictionary(item => item.ItemId, item => item);
+
+                    foreach (var reward in itemRewards)
+                    {
+                        if (existingByItemId.TryGetValue(reward.ItemId, out var existing))
+                        {
+                            existing.Quantity += reward.Quantity;
+                            continue;
+                        }
+
+                        _db.AccountItems.Add(new Data.Entities.AccountItem
+                        {
+                            AccountId = accountId,
+                            ItemId = reward.ItemId,
+                            Quantity = reward.Quantity
+                        });
+                    }
+                }
+
                 _db.AccountLoginBonusLogs.Add(new Data.Entities.AccountLoginBonusLog
                 {
                     AccountId = accountId,

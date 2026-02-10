@@ -30,11 +30,22 @@ const accountPage = document.getElementById("account-page");
 const accountCreateForm = document.getElementById("account-create-form");
 const accountNameInput = document.getElementById("account-name");
 const accountCreateStatus = document.getElementById("account-create-status");
+const accountDetailSubtitle = document.getElementById("account-detail-subtitle");
+const accountDetailBack = document.getElementById("account-detail-back");
+const accountDetailDelete = document.getElementById("account-detail-delete");
+const accountDetailId = document.getElementById("account-detail-id");
+const accountDetailName = document.getElementById("account-detail-name");
+const accountDetailLastLoginAt = document.getElementById("account-detail-last-login-at");
+const accountDetailItemsStatus = document.getElementById("account-detail-items-status");
+const accountDetailItemsBody = document.getElementById("account-detail-items-body");
+const accountDetailHistoryStatus = document.getElementById("account-detail-history-status");
+const accountDetailHistoryBody = document.getElementById("account-detail-history-body");
 
 const accountLimit = 50;
 let accountOffset = 0;
 let accountTotal = 0;
 let accountLoading = false;
+let activeAccountId = null;
 
 const assetsItemEndpoint = "/assets/item/list";
 let assetsItems = [];
@@ -586,6 +597,147 @@ function syncDateRangeFromMonth() {
     renderCalendar(selected);
 }
 
+function setAccountDetailLoading(text) {
+    if (accountDetailSubtitle) {
+        accountDetailSubtitle.textContent = text;
+    }
+}
+
+function clearAccountDetailTables() {
+    if (accountDetailItemsBody) {
+        accountDetailItemsBody.innerHTML = "";
+    }
+    if (accountDetailHistoryBody) {
+        accountDetailHistoryBody.innerHTML = "";
+    }
+}
+
+function resetAccountDetailView() {
+    activeAccountId = null;
+    if (accountDetailId) {
+        accountDetailId.textContent = "-";
+    }
+    if (accountDetailName) {
+        accountDetailName.textContent = "-";
+    }
+    if (accountDetailLastLoginAt) {
+        accountDetailLastLoginAt.textContent = "-";
+    }
+    if (accountDetailItemsStatus) {
+        accountDetailItemsStatus.textContent = "";
+    }
+    if (accountDetailHistoryStatus) {
+        accountDetailHistoryStatus.textContent = "";
+    }
+    clearAccountDetailTables();
+    if (accountDetailDelete) {
+        accountDetailDelete.disabled = true;
+    }
+}
+
+async function loadAccountDetail(accountId) {
+    if (!Number.isInteger(accountId) || accountId <= 0) {
+        return;
+    }
+
+    activeAccountId = accountId;
+    if (accountDetailDelete) {
+        accountDetailDelete.disabled = false;
+    }
+    setAccountDetailLoading("読み込み中...");
+    if (accountDetailItemsStatus) {
+        accountDetailItemsStatus.textContent = "読み込み中...";
+    }
+    if (accountDetailHistoryStatus) {
+        accountDetailHistoryStatus.textContent = "読み込み中...";
+    }
+    clearAccountDetailTables();
+
+    try {
+        const response = await fetch(`/admin/account/${accountId}`);
+        if (response.status === 404) {
+            setAccountDetailLoading("見つかりません。");
+            if (accountDetailItemsStatus) {
+                accountDetailItemsStatus.textContent = "";
+            }
+            if (accountDetailHistoryStatus) {
+                accountDetailHistoryStatus.textContent = "";
+            }
+            return;
+        }
+
+        if (!response.ok) {
+            setAccountDetailLoading(`取得に失敗しました: ${response.status}`);
+            return;
+        }
+
+        const data = unwrapResponse(await response.json());
+        setAccountDetailLoading("");
+
+        if (accountDetailId) {
+            accountDetailId.textContent = data.id == null ? "-" : String(data.id);
+        }
+        if (accountDetailName) {
+            accountDetailName.textContent = data.name ?? "-";
+        }
+        if (accountDetailLastLoginAt) {
+            accountDetailLastLoginAt.textContent = data.lastLoginAt ?? "-";
+        }
+
+        const items = Array.isArray(data.items) ? data.items : [];
+        if (accountDetailItemsStatus) {
+            accountDetailItemsStatus.textContent = items.length === 0 ? "データがありません。" : "";
+        }
+        for (const item of items) {
+            const row = document.createElement("tr");
+
+            const itemIdCell = document.createElement("td");
+            itemIdCell.textContent = item.itemId == null ? "" : String(item.itemId);
+            row.appendChild(itemIdCell);
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = item.name ?? "";
+            row.appendChild(nameCell);
+
+            const qtyCell = document.createElement("td");
+            qtyCell.textContent = item.quantity == null ? "" : String(item.quantity);
+            row.appendChild(qtyCell);
+
+            accountDetailItemsBody.appendChild(row);
+        }
+
+        const history = Array.isArray(data.loginHistory) ? data.loginHistory : [];
+        if (accountDetailHistoryStatus) {
+            accountDetailHistoryStatus.textContent = history.length === 0 ? "データがありません。" : "";
+        }
+        for (const entry of history) {
+            const row = document.createElement("tr");
+
+            const claimedAtCell = document.createElement("td");
+            claimedAtCell.textContent = entry.claimedAt ?? "";
+            row.appendChild(claimedAtCell);
+
+            const bonusCell = document.createElement("td");
+            const bonusId = entry.loginBonusId == null ? "" : String(entry.loginBonusId);
+            const bonusName = entry.loginBonusName ?? "";
+            bonusCell.textContent = bonusName ? `${bonusId}: ${bonusName}` : bonusId;
+            row.appendChild(bonusCell);
+
+            const dateCell = document.createElement("td");
+            dateCell.textContent = entry.loginBonusDate ?? "";
+            row.appendChild(dateCell);
+
+            const countCell = document.createElement("td");
+            countCell.textContent = entry.claimCount == null ? "" : String(entry.claimCount);
+            row.appendChild(countCell);
+
+            accountDetailHistoryBody.appendChild(row);
+        }
+    } catch (error) {
+        setAccountDetailLoading(`取得に失敗しました: ${error}`);
+    }
+}
+
 async function loadAccounts() {
     if (accountLoading) {
         return;
@@ -615,6 +767,13 @@ async function loadAccounts() {
         for (const account of accounts) {
             const row = document.createElement("tr");
             const accountId = account.id;
+            if (Number.isInteger(accountId) && accountId > 0) {
+                row.classList.add("is-clickable");
+                row.addEventListener("click", () => {
+                    setView("account-detail");
+                    loadAccountDetail(accountId);
+                });
+            }
             const idCell = document.createElement("td");
             idCell.textContent = accountId == null ? "" : String(accountId);
             row.appendChild(idCell);
@@ -626,33 +785,6 @@ async function loadAccounts() {
             const lastLoginCell = document.createElement("td");
             lastLoginCell.textContent = account.lastLoginAt ?? "";
             row.appendChild(lastLoginCell);
-
-            const actionCell = document.createElement("td");
-            const deleteButton = document.createElement("button");
-            deleteButton.type = "button";
-            deleteButton.className = "ghost danger";
-            deleteButton.dataset.accountId = accountId == null ? "" : String(accountId);
-            deleteButton.textContent = "削除";
-            actionCell.appendChild(deleteButton);
-            row.appendChild(actionCell);
-
-            deleteButton.addEventListener("click", async () => {
-                const confirmed = window.confirm(`アカウント ${accountId} を削除しますか？`);
-                if (!confirmed) {
-                    return;
-                }
-
-                const deleteResponse = await fetch(`/admin/account/${accountId}`, {
-                    method: "DELETE"
-                });
-
-                if (!deleteResponse.ok) {
-                    alert(`削除に失敗しました: ${deleteResponse.status}`);
-                    return;
-                }
-
-                await loadAccounts();
-            });
 
             accountTableBody.appendChild(row);
         }
@@ -680,6 +812,13 @@ function setView(viewName) {
 
     if (viewName === "accounts") {
         loadAccounts();
+    }
+
+    if (viewName === "account-detail") {
+        if (activeAccountId == null) {
+            resetAccountDetailView();
+            setAccountDetailLoading("アカウントを選択してください。");
+        }
     }
 
     if (viewName === "login-bonus") {
@@ -721,6 +860,39 @@ accountNext.addEventListener("click", () => {
 accountReload.addEventListener("click", () => {
     loadAccounts();
 });
+
+if (accountDetailBack) {
+    accountDetailBack.addEventListener("click", () => {
+        setView("accounts");
+    });
+}
+
+if (accountDetailDelete) {
+    accountDetailDelete.addEventListener("click", async () => {
+        if (activeAccountId == null) {
+            return;
+        }
+
+        const confirmed = window.confirm(`アカウント ${activeAccountId} を削除しますか？`);
+        if (!confirmed) {
+            return;
+        }
+
+        setAccountDetailLoading("削除中...");
+        try {
+            const response = await fetch(`/admin/account/${activeAccountId}`, { method: "DELETE" });
+            if (!response.ok) {
+                setAccountDetailLoading(`削除に失敗しました: ${response.status}`);
+                return;
+            }
+
+            resetAccountDetailView();
+            setView("accounts");
+        } catch (error) {
+            setAccountDetailLoading(`削除に失敗しました: ${error}`);
+        }
+    });
+}
 
 accountCreateForm.addEventListener("submit", async (event) => {
     event.preventDefault();
